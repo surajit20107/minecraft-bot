@@ -1,12 +1,13 @@
+import "dotenv/config";
 import bedrockProtocol from "bedrock-protocol";
 import express from "express";
 
 const app = express();
 
 const client = bedrockProtocol.createClient({
-  host: "163.5.201.2",
-  port: 10368,
-  username: "bot7833", // Your bot name
+  host: process.env.MC_HOST,
+  port: Number(process.env.MC_PORT),
+  username: process.env.MC_USERNAME, // Your bot name
   offline: true, // Don't use Microsoft/Xbox authentication
 });
 
