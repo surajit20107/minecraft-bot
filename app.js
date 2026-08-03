@@ -7,8 +7,7 @@ const app = express();
 const client = bedrockProtocol.createClient({
   host: process.env.MC_HOST,
   port: Number(process.env.MC_PORT),
-  username: process.env.MC_USERNAME, // Your bot name
-  offline: true, // Don't use Microsoft/Xbox authentication
+  profilesFolder: "./profiles", // stores login tokens
 });
 
 client.on("connect", () => {
