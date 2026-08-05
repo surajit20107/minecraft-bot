@@ -24,8 +24,6 @@ client.on("disconnect", (reason) => {
 
 client.on("error", console.error);
 
-const PORT = process.env.PORT || 3000;
-
 app.get("/", (_, res) => {
   res.send("Server is up and running... 🚀");
 });
@@ -37,6 +35,8 @@ app.head("/health", (_, res) => {
 app.get("/health", (_, res) => {
   res.sendStatus(200);
 });
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
