@@ -5,8 +5,7 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js"
+    "start": "node app.js"
   },
   "keywords": [],
   "author": "",
@@ -16,8 +15,5 @@
     "bedrock-protocol": "^3.57.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.14"
   }
 }
