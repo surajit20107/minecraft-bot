@@ -25,13 +25,16 @@ function connectBot() {
   client.on("death_info", async () => {
     client.close();
     isConnected = false;
+    client = null;
     console.log("Bot died. Reconnecting in 30 seconds...");
     await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait for 30 seconds before reconnecting
     connectBot();
   });
 
   client.on("disconnect", async (packet) => {
+    client.close();
     isConnected = false;
+    client = null;
     console.log(`Bot disconnected: ${packet.reason || "unknown reason"}. Reconnecting in 30 seconds...`);
     await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait for 30 seconds before reconnecting
     connectBot();
@@ -65,7 +68,7 @@ app.get("/", async (_, res) => {
   const status = await getServerStatus();
 
   res.status(200).json({
-    botStatus: isConnected ? "Bot is connected" : "Bot is disconnected",
+    botStatus: isConnected ? "Bot is connected 🤖" : "Bot is disconnected ❌",
     serverStatus: status || "Unable to fetch server status",
   })
 });
