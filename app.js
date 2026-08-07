@@ -38,8 +38,35 @@ function connectBot() {
   client.on("error", console.error);
 }
 
-app.get("/", (_, res) => {
-  res.send("Server is up and running... 🚀");
+async function getServerStatus() {
+  const host = process.env.MC_HOST;
+  const port = Number(process.env.MC_PORT);
+  const platform = process.env.MC_PLATFORM;
+  const url = `https://minecraft-serverhub.com/api/ping?host=${host}&port=${port}&platform=${platform}`;
+
+  try {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Failed to fetch server status:", err.message);
+    return null;
+  }
+}
+
+app.get("/", async (_, res) => {
+  // res.send("Server is up and running... 🚀");
+  const status = await getServerStatus();
+
+  res.status(200).json({
+    botStatus: isConnected ? "Bot is connected" : "Bot is disconnected",
+    serverStatus: status || "Unable to fetch server status",
+  })
 });
 
 app.head("/health", (_, res) => {
