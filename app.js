@@ -30,9 +30,11 @@ function connectBot() {
     connectBot();
   });
 
-  client.on("disconnect", async (reason) => {
-    console.log("Disconnected:", reason);
-    if (isConnected) return; // If the bot was connected, don't attempt to reconnect
+  client.on("disconnect", async (packet) => {
+    isConnected = false;
+    console.log(`Bot disconnected: ${packet.reason || "unknown reason"}. Reconnecting in 30 seconds...`);
+    await new Promise((resolve) => setTimeout(resolve, 30000)); // Wait for 30 seconds before reconnecting
+    connectBot();
   });
 
   client.on("error", console.error);
