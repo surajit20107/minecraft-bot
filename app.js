@@ -60,7 +60,6 @@ async function getServerStatus() {
 }
 
 app.get("/", async (_, res) => {
-  // res.send("Server is up and running... 🚀");
   const status = await getServerStatus();
 
   res.status(200).json({
