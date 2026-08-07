@@ -46,7 +46,7 @@ function connectBot() {
 async function getServerStatus() {
   const host = process.env.MC_HOST;
   const port = Number(process.env.MC_PORT);
-  const platform = process.env.MC_PLATFORM;
+  const platform = process.env.MC_PLATFORM || "bedrock"; // Default to "bedrock" if not specified
   const url = `https://minecraft-serverhub.com/api/ping?host=${host}&port=${port}&platform=${platform}`;
 
   try {
