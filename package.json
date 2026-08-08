@@ -1,6 +1,6 @@
 {
   "name": "minecraft-bot",
-  "version": "1.0.0",
+  "version": "1.0",
   "description": "A Minecraft bot that can connect to a server and make the free server active for 24/7 with auto connect feature.",
   "private": true,
   "type": "module",
@@ -8,7 +8,16 @@
   "scripts": {
     "start": "node app.js"
   },
-  "keywords": ["minecraft", "bot"],
+  "keywords": [
+    "minecraft",
+    "bot",
+    "minecraft-bot",
+    "bedrock",
+    "java",
+    "minecraft-server",
+    "protocol",
+    "pocket-edition"
+  ],
   "author": "github.com/surajit20107",
   "license": "ISC",
   "dependencies": {
