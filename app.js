@@ -11,6 +11,7 @@ function connectBot() {
     host: process.env.MC_HOST, // Minecraft server IP or hostname
     port: Number(process.env.MC_PORT), // Minecraft server port
     profilesFolder: "./profiles", // stores login tokens
+    version: "1.26.30", // Minecraft server version (optional)
   });
 
   client.on("connect", () => {
