@@ -21,7 +21,7 @@
   "author": "github.com/surajit20107",
   "license": "ISC",
   "dependencies": {
-    "bedrock-protocol": "^3.58.0",
+    "bedrock-protocol": "^3.58.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
   }

@@ -13,7 +13,6 @@ function connectBot() {
     username: process.env.MC_USERNAME, // Minecraft username
     offline: process.env.MC_OFFLINE === "true", // set to true for offline mode
     profilesFolder: "./profiles", // stores login tokens
-    version: "1.26.30", // Minecraft server version (optional)
   });
 
   client.on("connect", () => {
@@ -66,15 +65,6 @@ async function getServerStatus() {
     return null;
   }
 }
-
-// app.get("/", async (_, res) => {
-//   const status = await getServerStatus();
-
-//   res.status(200).json({
-//     botStatus: isConnected ? "Bot is connected 🤖" : "Bot is disconnected ❌",
-//     serverStatus: status || "Unable to fetch server status",
-//   })
-// });
 
 app.get("/", async (_, res) => {
   const status = await getServerStatus();
