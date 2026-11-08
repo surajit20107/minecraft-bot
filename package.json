@@ -9,7 +9,7 @@
   "type": "module",
   "dependencies": {
     "@tavily/core": "^0.7.13",
-    "bedrock-protocol": "^3.60.1",
+    "bedrock-protocol": "^3.61.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "openai": "^7.13.0"

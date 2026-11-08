@@ -2,7 +2,7 @@ export const BOT_CONSTANTS = {
   // Dynamic version: defaults to env MC_VERSION, live version is fetched via getServerStatus() from the ping API
   // No hardcoded Minecraft version here - resolved at runtime from server ping (see serverStatus.service.js)
   VERSION: process.env.MC_VERSION || undefined,
-  OFFLINE: true,
+  OFFLINE: process.env.MC_OFFLINE === "true",
   RECONNECT_DELAY_MS: 30_000,
   DEFAULT_USERNAME: "surajit_bot",
   DEFAULT_PLATFORM: process.env.MC_PLATFORM || "bedrock",

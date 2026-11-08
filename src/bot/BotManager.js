@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import bedrockProtocol from "bedrock-protocol";
 import { config } from "../config/index.js";
 import { BOT_CONSTANTS } from "../config/constants.js";
@@ -27,12 +28,12 @@ export class BotManager {
     // Dynamic versioning: prefer configured version, otherwise fetch live version from ping API
     // No hardcoded fallback here - version is resolved at runtime
     let version = config.mc.version;
+    if (!version || version === "auto") version = undefined;
     if (!version) {
       try {
         const status = await getServerStatus();
         if (status?.version) {
-          version = status.version;
-          logger.info(`Resolved Minecraft version dynamically from server: ${version}`);
+          logger.info(`Resolved Minecraft version dynamically from server: ${status.version}`);
         }
       } catch (err) {
         logger.warn(`Could not resolve dynamic version: ${err.message}`);
@@ -43,13 +44,18 @@ export class BotManager {
       `Connecting to ${config.mc.host}:${config.mc.port} as ${config.mc.username} (v${version ?? "auto"})`
     );
 
+    // Project-root profiles folder (file is at src/bot/BotManager.js)
+    const profilesFolder = fileURLToPath(new URL("../../profiles", import.meta.url));
+
     this.#client = bedrockProtocol.createClient({
       host: config.mc.host,
       port: Number(config.mc.port),
       username: config.mc.username,
       offline: config.mc.offline,
-      // profilesFolder: "../../profiles",
-      version: version || undefined, // undefined lets bedrock-protocol negotiate / use supported version dynamically
+      profilesFolder,
+      // undefined lets bedrock-protocol discover the server's protocol version and
+      // pick the matching minecraft-data version automatically.
+      version: version || undefined,
     });
 
     this.#registerEvents();
@@ -128,6 +134,11 @@ export class BotManager {
       if (err.message?.includes("Missing characters in string")) return;
       if (err.message?.includes("Read error")) return;
       logger.error("Client error:", err.message);
+      // The initial connection can fail before "join" fires (bad version, auth,
+      // protocol mismatch). Without this the bot would never retry.
+      if (!this.#isConnected) {
+        this.#handleDisconnect("Initial connection failed.");
+      }
     });
   }
 
