@@ -6,12 +6,17 @@ export function createChatHandler(getClient, sendChat) {
   return async (packet) => {
     try {
       const client = getClient();
+      // Bedrock servers often append formatting codes (e.g. "§r") to names.
+      const sourceName = String(packet.source_name ?? "")
+        .replace(/§[0-9a-fk-orx]/gi, "")
+        .trim();
+
       logger.debug(
-        `Text event: type=${packet.type} from=${packet.source_name} msg=${packet.message}`
+        `Text event: type=${packet.type} from=${sourceName} msg=${packet.message}`
       );
 
       if (packet.type !== "chat") return;
-      if (client && packet.source_name === client.username) return;
+      if (client && sourceName === client.username) return;
 
       const msg = packet.message?.trim() || "";
       if (!msg.toLowerCase().startsWith("bot ")) return;
@@ -22,14 +27,14 @@ export function createChatHandler(getClient, sendChat) {
         return;
       }
 
-      logger.game(`${packet.source_name} asked: ${question}`);
+      logger.game(`${sourceName} asked: ${question}`);
 
       addMessage("user", question);
       const answer = await askAI(question);
       logger.game(`AI answer: ${answer}`);
 
       sendChat(answer);
-      logger.game(`Replied to ${packet.source_name}: ${answer}`);
+      logger.game(`Replied to ${sourceName}: ${answer}`);
     } catch (err) {
       logger.error("Error handling text event:", err?.message ?? err);
     }

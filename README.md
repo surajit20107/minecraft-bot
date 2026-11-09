@@ -48,6 +48,9 @@ A Minecraft Bedrock Edition bot powered by OpenAI that connects to your server a
    MC_USERNAME=""        # bot name
    MC_PLATFORM="bedrock" # options: [bedrock or java]
    MC_VERSION=""         # optional: override auto-detected version
+   MC_PING_TIMEOUT_MS="" # optional: RakNet ping timeout in ms (default: 5000)
+   MC_CONNECT_TIMEOUT_MS="" # optional: connection timeout in ms (default: 15000)
+   MC_SIGNALLING_URL=""  # optional: NetherNet signalling origin (auto-derived from MC_HOST/MC_PORT)
    OPENAI_BASE_URL=""    # any OpenAI compatible API endpoint
    OPENAI_API_KEY=""     # your AI API key
    AI_MODEL=""           # your AI model (e.g. gpt-4, gpt-3.5-turbo) default: auto
@@ -111,6 +114,9 @@ minecraft-bot/
 | `MC_USERNAME` | No | `surajit_bot` | Bot's in-game username |
 | `MC_PLATFORM` | No | `bedrock` | Server platform (`bedrock` or `java`) |
 | `MC_VERSION` | No | _(auto)_ | Minecraft version override (auto-resolved from server ping if empty) |
+| `MC_PING_TIMEOUT_MS` | No | `5000` | RakNet/NetherNet ping timeout in milliseconds |
+| `MC_CONNECT_TIMEOUT_MS` | No | `15000` | Connection timeout in milliseconds |
+| `MC_SIGNALLING_URL` | No | _(auto)_ | NetherNet HTTP(S) signalling origin. Derived as `https://<host>:<port>` when unset |
 | `OPENAI_BASE_URL` | Yes | - | OpenAI-compatible API endpoint |
 | `OPENAI_API_KEY` | Yes | - | Your API key |
 | `AI_MODEL` | No | `auto` | Model to use for chat completions |
@@ -120,7 +126,7 @@ minecraft-bot/
 
 ## How It Works
 
-1. The bot resolves the Minecraft version dynamically via the ping API (`src/services/serverStatus.service.js`) or `MC_VERSION` if set, then connects using `bedrock-protocol` (`src/bot/BotManager.js`).
+1. The bot resolves the Minecraft version dynamically via the status ping (`src/services/serverStatus.service.js`) or `MC_VERSION` if set, then connects using `bedrock-protocol` (`src/bot/BotManager.js`). Both legacy RakNet and modern NetherNet servers are supported: NetherNet HTTP(S) signalling (`GET /v1/join`) is probed in parallel with the RakNet UDP ping, and the discovered transport is reused for the connection.
 2. It listens for incoming `text` (chat) packets via `src/bot/handlers/chat.handler.js`.
 3. When a message starts with `bot `, the rest of the message is sent to the OpenAI-compatible API (`src/services/ai.service.js`).
 4. The AI is configured with a function tool `askTavily` (defined in `src/services/ai.service.js:22` and implemented in `src/bot/tavily.js:3`). If the user asks about current events, news, weather, prices, etc., the model calls the tool; `askTavily` queries Tavily (`searchDepth: "advanced"`, `includeAnswer: "basic"`) and returns `answer` or top 3 `results` content. The result is appended as a `tool` message and the model generates a final grounded answer. Providers without tool support fall back to a plain completion without Tavily.

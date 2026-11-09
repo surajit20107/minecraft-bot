@@ -25,37 +25,71 @@ export class BotManager {
       this.#cleanup();
     }
 
-    // Dynamic versioning: prefer configured version, otherwise fetch live version from ping API
-    // No hardcoded fallback here - version is resolved at runtime
-    let version = config.mc.version;
+    const {
+      host,
+      port,
+      username,
+      offline,
+      version: configuredVersion,
+      pingTimeout,
+      connectTimeout,
+    } = config.mc;
+
+    // A configured version comes from MC_VERSION. Empty/"auto" means undefined,
+    // which lets bedrock-protocol discover the server protocol and map it to a
+    // version supported by minecraft-data.
+    let version = configuredVersion;
     if (!version || version === "auto") version = undefined;
-    if (!version) {
-      try {
-        const status = await getServerStatus();
-        if (status?.version) {
-          logger.info(`Resolved Minecraft version dynamically from server: ${status.version}`);
-        }
-      } catch (err) {
-        logger.warn(`Could not resolve dynamic version: ${err.message}`);
-      }
+
+    // Ping first so an offline/sleeping server produces an actionable message
+    // instead of an opaque "All promises were rejected" / "Connect timed out".
+    const status = await getServerStatus();
+    if (status.online) {
+      logger.info(
+        `Server is online: ${status.version ? `v${status.version}, ` : ""}` +
+          `protocol ${status.protocol ?? "?"}, ` +
+          `transport ${status.transport}${status.signalling ? `/${status.signalling}` : ""}, ` +
+          `${status.players.online}/${status.players.max} players, ${status.ping}ms`
+      );
+    } else {
+      logger.warn(
+        `Server ${host}:${port} is not responding to pings. Aternos servers sleep when empty - ` +
+          "start it from the Aternos panel and the bot will connect on the next retry."
+      );
     }
 
     logger.info(
-      `Connecting to ${config.mc.host}:${config.mc.port} as ${config.mc.username} (v${version ?? "auto"})`
+      `Connecting to ${host}:${port} as ${username} (v${version ?? "auto"})`
     );
 
     // Project-root profiles folder (file is at src/bot/BotManager.js)
     const profilesFolder = fileURLToPath(new URL("../../profiles", import.meta.url));
 
+    // Bedrock 1.26.60+ uses NetherNet. When the status ping discovered the
+    // server through its HTTP signalling endpoint, connect over that same
+    // transport (plain UDP RakNet no longer exists on these servers).
+    const nethernet =
+      status.online &&
+      status.transport === "nethernet" &&
+      status.signalling === "http" &&
+      status.signallingUrl
+        ? { signalling: "http", url: status.signallingUrl }
+        : undefined;
+
     this.#client = bedrockProtocol.createClient({
-      host: config.mc.host,
-      port: Number(config.mc.port),
-      username: config.mc.username,
-      offline: config.mc.offline,
+      host,
+      port: Number(port),
+      username,
+      offline,
       profilesFolder,
       // undefined lets bedrock-protocol discover the server's protocol version and
       // pick the matching minecraft-data version automatically.
-      version: version || undefined,
+      version,
+      // The library defaults these to 1s/9s, which is too aggressive for
+      // remote hosts (and Aternos in particular).
+      pingTimeout,
+      connectTimeout,
+      ...(nethernet ? { nethernet } : {}),
     });
 
     this.#registerEvents();

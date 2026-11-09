@@ -18,6 +18,11 @@ export const config = {
     platform: process.env.MC_PLATFORM || BOT_CONSTANTS.DEFAULT_PLATFORM,
     version: process.env.MC_VERSION || BOT_CONSTANTS.VERSION,
     offline: BOT_CONSTANTS.OFFLINE,
+    pingTimeout: BOT_CONSTANTS.PING_TIMEOUT_MS,
+    connectTimeout: BOT_CONSTANTS.CONNECT_TIMEOUT_MS,
+    // Optional explicit NetherNet signalling origin, e.g.
+    // https://example.aternos.me:19132. Derived from MC_HOST/MC_PORT if unset.
+    signallingUrl: process.env.MC_SIGNALLING_URL || undefined,
   },
   ai: {
     baseURL: requireEnv("OPENAI_BASE_URL"),
