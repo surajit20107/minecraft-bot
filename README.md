@@ -46,8 +46,9 @@ A Minecraft Bedrock Edition bot powered by OpenAI that connects to your server a
    ```env
    MC_HOST=""            # your server IP
    MC_PORT=""            # your server port
-   MC_USERNAME=""        # bot name
+   MC_USERNAME=""        # bot name (offline login) / profile cache name (online login)
    MC_PLATFORM="bedrock" # options: [bedrock or java]
+   MC_OFFLINE="false"    # false = Microsoft/Xbox login (required by Aternos/BDS)
    MC_VERSION=""         # optional: override auto-detected version (must be known to minecraft-data)
    MC_PING_TIMEOUT_MS="" # optional: RakNet ping timeout in ms (default: 5000)
    MC_CONNECT_TIMEOUT_MS="" # optional: connection timeout in ms (default: 15000)
@@ -115,8 +116,9 @@ minecraft-bot/
 |---|---|---|---|
 | `MC_HOST` | Yes | - | Minecraft server IP or hostname |
 | `MC_PORT` | No | `19132` | Minecraft server port |
-| `MC_USERNAME` | No | `surajit_bot` | Bot's in-game username |
+| `MC_USERNAME` | No | `surajit_bot` | Bot name for offline login; account cache key for online login |
 | `MC_PLATFORM` | No | `bedrock` | Server platform (`bedrock` or `java`) |
+| `MC_OFFLINE` | No | `false` | `true` skips Xbox login. Only works on offline-mode servers; vanilla Aternos/BDS servers reject it with `not_authenticated` |
 | `MC_VERSION` | No | _(auto)_ | Minecraft version override. Unknown/newer hotfix versions fall back to auto-detection using the server protocol |
 | `MC_PING_TIMEOUT_MS` | No | `5000` | RakNet/NetherNet ping timeout in milliseconds |
 | `MC_CONNECT_TIMEOUT_MS` | No | `15000` | Connection timeout in milliseconds |
@@ -139,6 +141,21 @@ minecraft-bot/
 5. The AI response is sent back to the server as a chat message.
 6. If the bot dies or disconnects, `BotManager` waits 30 seconds and reconnects automatically. The web dashboard (`src/web/`) exposes bot/server status at `GET /` and `GET /health`.
 7. After joining, `src/bot/sessionInput.js` sends one `player_auth_input` per server tick (50 ms), anchored to `start_game.current_tick`, and slowly rotates the view. This is the packet modern Bedrock servers expect to keep a player session alive; without it the server can silently drop the session even though the Node process still looks connected. A watchdog reconnects if the server goes silent for `MC_KEEPALIVE_TIMEOUT_MS`.
+
+### Microsoft sign-in (Aternos / vanilla BDS)
+
+Vanilla Bedrock servers (including Aternos) run in online mode and reject unauthenticated clients with `Kicked by server: not_authenticated`. Set `MC_OFFLINE="false"` and use a Microsoft account that owns Minecraft: Bedrock Edition.
+
+On the first start the bot prints a device code:
+
+```
+[WARN] Microsoft sign-in required. Open the URL below and enter the code:
+  URL:  https://microsoft.com/link
+  Code: ABCD-1234
+The token is cached in ./profiles for future restarts.
+```
+
+Open the URL, enter the code, and sign in. The refresh token is written to `profiles/` (git-ignored), so later restarts reconnect without prompting. If you run the bot as a systemd service or under pm2, temporarily run it with `npm start` in a terminal to complete the first sign-in, then restart the service.
 
 ### Keeping an Aternos server online
 

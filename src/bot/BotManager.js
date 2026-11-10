@@ -105,8 +105,21 @@ export class BotManager {
       `Connecting to ${host}:${port} as ${username} (v${version ?? "auto"})`
     );
 
-    // Project-root profiles folder (file is at src/bot/BotManager.js)
+    // Project-root profiles folder (file is at src/bot/BotManager.js). Online-mode
+    // Aternos/BDS servers reject offline logins with "not_authenticated", so when
+    // MC_OFFLINE=false the Microsoft refresh token is cached here between restarts.
     const profilesFolder = fileURLToPath(new URL("../../profiles", import.meta.url));
+
+    // Device-code login: printed once on first start (or after the token cache is
+    // cleared). Stop the service, run it in a terminal, sign in, then restart.
+    const onMsaCode = (code) => {
+      logger.warn(
+        "Microsoft sign-in required. Open the URL below and enter the code:\n" +
+          `  URL:  ${code.verification_uri}\n` +
+          `  Code: ${code.user_code}\n` +
+          "The token is cached in ./profiles for future restarts."
+      );
+    };
 
     // Bedrock 1.26.60+ uses NetherNet. When the status ping discovered the
     // server through its HTTP signalling endpoint, connect over that same
@@ -125,6 +138,7 @@ export class BotManager {
       username,
       offline,
       profilesFolder,
+      onMsaCode,
       // undefined lets bedrock-protocol discover the server's protocol version and
       // pick the matching minecraft-data version automatically.
       version,
@@ -203,9 +217,15 @@ export class BotManager {
     });
 
     client.on("kick", (packet) => {
-      logger.warn(
-        `Kicked by server: ${packet?.message || packet?.reason || "unknown reason"}`
-      );
+      const reason = packet?.message || packet?.reason || "unknown reason";
+      logger.warn(`Kicked by server: ${reason}`);
+      if (String(reason).includes("not_authenticated") && config.mc.offline) {
+        logger.warn(
+          "The server requires Xbox Live authentication, but MC_OFFLINE=true. " +
+            "Vanilla Bedrock (Aternos/BDS) servers reject offline logins. " +
+            "Set MC_OFFLINE=false and sign in with a Microsoft account that owns Minecraft."
+        );
+      }
     });
 
     client.on("disconnect", async (packet) => {
