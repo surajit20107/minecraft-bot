@@ -7,6 +7,7 @@ A Minecraft Bedrock Edition bot powered by OpenAI that connects to your server a
 - **AI-Powered Chat** - Players can ask questions by typing `bot <question>` in chat, and the bot responds using OpenAI's API.
 - **Realtime Web Search (Tavily)** - AI can call `askTavily` via OpenAI tool-calling to fetch up-to-date information (news, weather, prices, scores, recent releases) when training data is insufficient. Falls back to model knowledge if `TAVILY_API_KEY` is not set or search fails.
 - **Auto-Reconnect** - Automatically reconnects after death or disconnection with a 30-second delay.
+- **Session Keepalive / Anti-AFK** - Sends the Bedrock `player_auth_input` heartbeat every server tick and gently looks around, so the server keeps the session alive instead of treating the bot as idle.
 - **Web Dashboard** - Real-time status page showing bot connection state and server details (players, version, ping, MOTD).
 - **Health Endpoint** - `/health` endpoint for uptime monitoring.
 - **Offline Mode Support** - Works with both online and offline Minecraft servers.
@@ -51,6 +52,8 @@ A Minecraft Bedrock Edition bot powered by OpenAI that connects to your server a
    MC_PING_TIMEOUT_MS="" # optional: RakNet ping timeout in ms (default: 5000)
    MC_CONNECT_TIMEOUT_MS="" # optional: connection timeout in ms (default: 15000)
    MC_SIGNALLING_URL=""  # optional: NetherNet signalling origin (auto-derived from MC_HOST/MC_PORT)
+   MC_INPUT_HEARTBEAT="true" # optional: per-tick session keepalive (default: true)
+   MC_KEEPALIVE_TIMEOUT_MS="" # optional: reconnect when no packet arrives for this long (default: 300000)
    OPENAI_BASE_URL=""    # any OpenAI compatible API endpoint
    OPENAI_API_KEY=""     # your AI API key
    AI_MODEL=""           # your AI model (e.g. gpt-4, gpt-3.5-turbo) default: auto
@@ -80,6 +83,7 @@ minecraft-bot/
 │   ├── server.js                     # Entry point — starts Express + bot
 │   ├── bot/
 │   │   ├── BotManager.js             # Connection, lifecycle & auto-reconnect
+│   │   ├── sessionInput.js           # Per-tick player_auth_input heartbeat / anti-AFK
 │   │   ├── tavily.js                 # Tavily realtime search wrapper (askTavily)
 │   │   ├── index.js                  # Bot exports
 │   │   └── handlers/
@@ -117,6 +121,8 @@ minecraft-bot/
 | `MC_PING_TIMEOUT_MS` | No | `5000` | RakNet/NetherNet ping timeout in milliseconds |
 | `MC_CONNECT_TIMEOUT_MS` | No | `15000` | Connection timeout in milliseconds |
 | `MC_SIGNALLING_URL` | No | _(auto)_ | NetherNet HTTP(S) signalling origin. Derived as `https://<host>:<port>` when unset |
+| `MC_INPUT_HEARTBEAT` | No | `true` | Send the per-tick Bedrock `player_auth_input` session heartbeat and anti-AFK look |
+| `MC_KEEPALIVE_TIMEOUT_MS` | No | `300000` | Reconnect if no server packet is received for this long |
 | `OPENAI_BASE_URL` | Yes | - | OpenAI-compatible API endpoint |
 | `OPENAI_API_KEY` | Yes | - | Your API key |
 | `AI_MODEL` | No | `auto` | Model to use for chat completions |
@@ -132,6 +138,11 @@ minecraft-bot/
 4. The AI is configured with a function tool `askTavily` (defined in `src/services/ai.service.js:22` and implemented in `src/bot/tavily.js:3`). If the user asks about current events, news, weather, prices, etc., the model calls the tool; `askTavily` queries Tavily (`searchDepth: "advanced"`, `includeAnswer: "basic"`) and returns `answer` or top 3 `results` content. The result is appended as a `tool` message and the model generates a final grounded answer. Providers without tool support fall back to a plain completion without Tavily.
 5. The AI response is sent back to the server as a chat message.
 6. If the bot dies or disconnects, `BotManager` waits 30 seconds and reconnects automatically. The web dashboard (`src/web/`) exposes bot/server status at `GET /` and `GET /health`.
+7. After joining, `src/bot/sessionInput.js` sends one `player_auth_input` per server tick (50 ms), anchored to `start_game.current_tick`, and slowly rotates the view. This is the packet modern Bedrock servers expect to keep a player session alive; without it the server can silently drop the session even though the Node process still looks connected. A watchdog reconnects if the server goes silent for `MC_KEEPALIVE_TIMEOUT_MS`.
+
+### Keeping an Aternos server online
+
+Aternos stops a server once its last player leaves, and its help centre states that the platform actively looks for artificial activity from bots/scripts. This project's heartbeat + anti-AFK reduces the chance of the bot being treated as an idle/disconnected player, but it cannot guarantee 24/7 uptime and using a bot this way is against Aternos' rules. If you need reliable always-on hosting, use a paid host such as exaroton.
 
 ### Tavily Integration Details
 

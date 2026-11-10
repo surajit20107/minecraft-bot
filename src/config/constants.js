@@ -7,6 +7,12 @@ export const BOT_CONSTANTS = {
   // 1s default used internally by bedrock-protocol.
   PING_TIMEOUT_MS: Number(process.env.MC_PING_TIMEOUT_MS) || 5000,
   CONNECT_TIMEOUT_MS: Number(process.env.MC_CONNECT_TIMEOUT_MS) || 15000,
+  // Modern Bedrock servers expect a player_auth_input packet every tick. Sending it
+  // also keeps Aternos from treating the bot as an idle/inactive player.
+  INPUT_HEARTBEAT: process.env.MC_INPUT_HEARTBEAT !== "false",
+  // If the server sends no packets for this long, treat the session as dead and
+  // reconnect. Real clients always receive keepalive/latency packets well within this.
+  KEEPALIVE_TIMEOUT_MS: Number(process.env.MC_KEEPALIVE_TIMEOUT_MS) || 300_000,
   RECONNECT_DELAY_MS: 30_000,
   DEFAULT_USERNAME: "surajit_bot",
   DEFAULT_PLATFORM: process.env.MC_PLATFORM || "bedrock",

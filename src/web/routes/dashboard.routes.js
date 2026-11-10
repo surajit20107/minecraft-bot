@@ -12,6 +12,8 @@ dashboardRouter.get("/", async (_, res) => {
     const html = renderDashboard({
       isConnected: botManager.isConnected,
       status,
+      sessionInputActive: botManager.sessionInputActive,
+      lastPacketAt: botManager.lastPacketAt,
     });
     res.send(html);
   } catch (err) {

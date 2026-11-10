@@ -20,6 +20,8 @@ export const config = {
     offline: BOT_CONSTANTS.OFFLINE,
     pingTimeout: BOT_CONSTANTS.PING_TIMEOUT_MS,
     connectTimeout: BOT_CONSTANTS.CONNECT_TIMEOUT_MS,
+    inputHeartbeat: BOT_CONSTANTS.INPUT_HEARTBEAT,
+    keepaliveTimeout: BOT_CONSTANTS.KEEPALIVE_TIMEOUT_MS,
     // Optional explicit NetherNet signalling origin, e.g.
     // https://example.aternos.me:19132. Derived from MC_HOST/MC_PORT if unset.
     signallingUrl: process.env.MC_SIGNALLING_URL || undefined,

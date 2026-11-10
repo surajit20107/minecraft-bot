@@ -1,9 +1,17 @@
-export function renderDashboard({ isConnected, status }) {
+export function renderDashboard({
+  isConnected,
+  status,
+  sessionInputActive = false,
+  lastPacketAt = 0,
+}) {
   const botStatus = isConnected
     ? "Bot is connected 🤖"
     : "Bot is disconnected ❌";
 
   const serverOnline = status?.online ?? false;
+  const lastPacket = lastPacketAt
+    ? `${Math.max(0, Math.round((Date.now() - lastPacketAt) / 1000))}s ago`
+    : "never";
 
   return `
     <!DOCTYPE html>
@@ -64,6 +72,16 @@ export function renderDashboard({ isConnected, status }) {
           <h2>🤖 Bot Status</h2>
           <div class="status ${isConnected ? "online" : "offline"}">
             <span>${botStatus}</span>
+          </div>
+          <div class="info">
+            <span class="label">Session heartbeat</span>
+            <span class="value ${sessionInputActive ? "online" : "offline"}">
+              ${sessionInputActive ? "🟢 Active" : "🔴 Inactive"}
+            </span>
+          </div>
+          <div class="info">
+            <span class="label">Last server packet</span>
+            <span class="value">${lastPacket}</span>
           </div>
         </div>
         <div class="card">
