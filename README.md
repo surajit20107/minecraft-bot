@@ -48,7 +48,7 @@ A Minecraft Bedrock Edition bot powered by OpenAI that connects to your server a
    MC_PORT=""            # your server port
    MC_USERNAME=""        # bot name
    MC_PLATFORM="bedrock" # options: [bedrock or java]
-   MC_VERSION=""         # optional: override auto-detected version
+   MC_VERSION=""         # optional: override auto-detected version (must be known to minecraft-data)
    MC_PING_TIMEOUT_MS="" # optional: RakNet ping timeout in ms (default: 5000)
    MC_CONNECT_TIMEOUT_MS="" # optional: connection timeout in ms (default: 15000)
    MC_SIGNALLING_URL=""  # optional: NetherNet signalling origin (auto-derived from MC_HOST/MC_PORT)
@@ -117,7 +117,7 @@ minecraft-bot/
 | `MC_PORT` | No | `19132` | Minecraft server port |
 | `MC_USERNAME` | No | `surajit_bot` | Bot's in-game username |
 | `MC_PLATFORM` | No | `bedrock` | Server platform (`bedrock` or `java`) |
-| `MC_VERSION` | No | _(auto)_ | Minecraft version override (auto-resolved from server ping if empty) |
+| `MC_VERSION` | No | _(auto)_ | Minecraft version override. Unknown/newer hotfix versions fall back to auto-detection using the server protocol |
 | `MC_PING_TIMEOUT_MS` | No | `5000` | RakNet/NetherNet ping timeout in milliseconds |
 | `MC_CONNECT_TIMEOUT_MS` | No | `15000` | Connection timeout in milliseconds |
 | `MC_SIGNALLING_URL` | No | _(auto)_ | NetherNet HTTP(S) signalling origin. Derived as `https://<host>:<port>` when unset |

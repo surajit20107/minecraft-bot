@@ -1,11 +1,38 @@
 import { fileURLToPath } from "node:url";
 import bedrockProtocol from "bedrock-protocol";
+import minecraftData from "minecraft-data";
 import { config } from "../config/index.js";
 import { BOT_CONSTANTS } from "../config/constants.js";
 import { logger } from "../utils/logger.js";
 import { createChatHandler } from "./handlers/chat.handler.js";
 import { SessionInput } from "./sessionInput.js";
 import { getServerStatus } from "../services/serverStatus.service.js";
+
+// minecraft-data ships protocol data per release. Servers on a newer hotfix (e.g.
+// 1.26.62 while data stops at 1.26.60) keep the same wire protocol, so passing the
+// exact hotfix string makes the serializer fail with "Unsupported version". Treat an
+// unknown configured version as "auto" and let discovery map the protocol number.
+function resolveSupportedVersion(configuredVersion) {
+  if (!configuredVersion || configuredVersion === "auto") return undefined;
+
+  const version = String(configuredVersion).trim();
+  if (!version) return undefined;
+
+  const supported = minecraftData.versions.bedrock?.some(
+    (entry) =>
+      entry.minecraftVersion === version && entry.releaseType === "release"
+  );
+
+  if (!supported) {
+    logger.warn(
+      `MC_VERSION="${version}" is not supported by the bundled minecraft-data. ` +
+        "Falling back to automatic protocol/version detection."
+    );
+    return undefined;
+  }
+
+  return version;
+}
 
 export class BotManager {
   #client = null;
@@ -55,8 +82,7 @@ export class BotManager {
     // A configured version comes from MC_VERSION. Empty/"auto" means undefined,
     // which lets bedrock-protocol discover the server protocol and map it to a
     // version supported by minecraft-data.
-    let version = configuredVersion;
-    if (!version || version === "auto") version = undefined;
+    let version = resolveSupportedVersion(configuredVersion);
 
     // Ping first so an offline/sleeping server produces an actionable message
     // instead of an opaque "All promises were rejected" / "Connect timed out".
